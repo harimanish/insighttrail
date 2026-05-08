@@ -9,7 +9,7 @@ import psutil
 # Simple in-memory store for metrics (for demonstration)
 METRICS_STORE: DefaultDict[str, int] = defaultdict(int)
 START_TIME = time.time()
-PROCESS_START_TIMES = {}
+PROCESS_START_TIMES: dict[int, float] = {}
 RESTART_COUNT = 0
 
 
