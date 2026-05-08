@@ -4,4 +4,4 @@ __version__ = "0.1.0"
 
 from .middleware import InsightTrailMiddleware
 
-__all__ = ['InsightTrailMiddleware']
+__all__ = ["InsightTrailMiddleware"]

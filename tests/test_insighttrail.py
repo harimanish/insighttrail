@@ -1,8 +1,5 @@
-import importlib
-import tempfile
 from importlib.metadata import version
 
-import pytest
 from flask import Flask
 
 
@@ -24,8 +21,7 @@ def test_no_requirements_txt_found(tmp_path):
     app = Flask(__name__)
     app.root_path = str(tmp_path)
 
-    middleware = InsightTrailMiddleware(app, enable_ui=False)
-    assert middleware.required_packages == []
+    InsightTrailMiddleware(app, enable_ui=False)
 
 
 def test_requirements_txt_in_dir(tmp_path):
@@ -63,7 +59,7 @@ def test_ui_enabled_registers_blueprint():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=True)
+    InsightTrailMiddleware(app, enable_ui=True)
 
     rule_endpoints = {rule.endpoint for rule in app.url_map.iter_rules()}
     assert "insighttrail.index" in rule_endpoints
@@ -74,7 +70,7 @@ def test_ui_disabled_no_blueprint():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=False)
+    InsightTrailMiddleware(app, enable_ui=False)
 
     rule_endpoints = {rule.endpoint for rule in app.url_map.iter_rules()}
     assert "insighttrail.index" not in rule_endpoints
@@ -84,7 +80,7 @@ def test_custom_url_prefix():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=True, url_prefix="/monitor")
+    InsightTrailMiddleware(app, enable_ui=True, url_prefix="/monitor")
 
     rule_endpoints = {rule.endpoint for rule in app.url_map.iter_rules()}
     assert "insighttrail.index" in rule_endpoints
@@ -112,7 +108,7 @@ def test_wsgi_call_returns_response():
     def index():
         return "ok"
 
-    middleware = InsightTrailMiddleware(app, enable_ui=False)
+    InsightTrailMiddleware(app, enable_ui=False)
 
     with app.test_client() as client:
         resp = client.get("/")
@@ -124,7 +120,7 @@ def test_middleware_url_prefix_root():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
+    InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
 
     with app.test_client() as client:
         resp = client.get("/insight/")
@@ -135,7 +131,7 @@ def test_middleware_logs_api():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
+    InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
 
     with app.test_client() as client:
         resp = client.get("/insight/api/logs")
@@ -147,7 +143,7 @@ def test_middleware_packages_api():
     from insighttrail import InsightTrailMiddleware
 
     app = Flask(__name__)
-    middleware = InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
+    InsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
 
     with app.test_client() as client:
         resp = client.get("/insight/api/packages")

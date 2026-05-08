@@ -1,5 +1,7 @@
 import uuid
+
 from flask import g
+
 
 def trace_request(request):
     # Generate a trace ID

@@ -35,6 +35,7 @@ pip-log.txt
 
 #uv
 .venv
+logs/
 
 #npm
 node_modules
