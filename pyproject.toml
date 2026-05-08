@@ -37,8 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 prod = ["waitress"]
-
-[dependency-groups]
+fastapi = ["fastapi"]
 dev = [
     "ruff",
     "mypy",
@@ -46,6 +45,7 @@ dev = [
     "pytest-cov",
     "pre-commit",
     "types-requests",
+    "httpx",
 ]
 
 [tool.hatch.build.targets.wheel]
