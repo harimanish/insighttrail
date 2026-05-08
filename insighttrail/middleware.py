@@ -69,7 +69,7 @@ class InsightTrailMiddleware:
         @app.after_request
         def after_request(response):
             duration = time.time() - g.start_time
-            record_metrics(request, response, duration)
+            record_metrics(request.method, str(response.status_code), duration)
             log_request(request, response, duration)
             return response
 

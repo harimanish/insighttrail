@@ -85,10 +85,10 @@ def get_system_metrics():
     }
 
 
-def record_metrics(request, response, duration):
+def record_metrics(method, status_code, duration):
     METRICS_STORE["total_requests"] += 1
-    METRICS_STORE[f"{request.method}_requests"] += 1
-    METRICS_STORE[f"status_{response.status_code}"] += 1
+    METRICS_STORE[f"method_{method}"] += 1
+    METRICS_STORE[f"status_{status_code}"] += 1
     METRICS_STORE["total_duration"] += duration
 
     # Record process information
