@@ -30,14 +30,14 @@ pip-log.txt
 *_test
 .coverage
 
-
 # backup cruft
 *.old
-setup.cfg
+
+#uv
+.venv
 
 #npm
 node_modules
 
 #IDE
 .idea
-

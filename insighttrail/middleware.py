@@ -5,7 +5,7 @@ import json
 from .logger import setup_logger, log_request, log_error
 from .metrics import record_metrics, get_metrics
 from .traces import trace_request
-import pkg_resources
+from importlib.metadata import distributions
 import requests
 import traceback
 import sys
@@ -86,20 +86,22 @@ class InsightTrailMiddleware:
         app_deps = set(self.required_packages)
         required_set = app_deps.union(insighttrail_deps)
 
-        for dist in pkg_resources.working_set:
+        for dist in distributions():
             try:
-                # Get package metadata
+                name = dist.metadata['Name']
+                package_key = name.lower()
+
                 package = {
-                    'name': dist.key,
+                    'name': package_key,
                     'current_version': dist.version,
-                    'latest_version': dist.version,  # Will be updated if PyPI info is available
-                    'required': dist.key.lower() in required_set,
-                    'description': dist._get_metadata('Summary') if dist.has_metadata('Summary') else None
+                    'latest_version': dist.version,
+                    'required': package_key in required_set,
+                    'description': dist.metadata.get('Summary'),
                 }
 
                 # Try to get latest version from PyPI
                 try:
-                    pypi_url = f"https://pypi.org/pypi/{dist.key}/json"
+                    pypi_url = f"https://pypi.org/pypi/{package_key}/json"
                     response = requests.get(pypi_url, timeout=2)
                     if response.status_code == 200:
                         pypi_data = response.json()
