@@ -70,14 +70,20 @@ class InsightTrailMiddleware:
         def after_request(response):
             duration = time.time() - g.start_time
             record_metrics(request.method, str(response.status_code), duration)
-            log_request(request, response, duration)
+            log_request(
+                request.method,
+                request.path,
+                response.status_code,
+                duration,
+                request.remote_addr,
+            )
             return response
 
         @app.teardown_request
         def teardown_request(exception=None):
             if exception is not None:
                 duration = time.time() - g.start_time
-                log_error(request, exception, duration)
+                log_error(request.method, request.path, duration, request.remote_addr, exception)
 
     def _parse_log_file(self):
         return parse_log_file(self.log_file)
@@ -94,7 +100,7 @@ class InsightTrailMiddleware:
 
         @insight_bp.route("/")
         def index():
-            return render_template("index.html")
+            return render_template("index.html", url_prefix=url_prefix)
 
         @insight_bp.route("/api/packages")
         def get_packages():

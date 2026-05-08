@@ -162,7 +162,7 @@ def get_runtime_info():
         return {"error": str(e)}
 
 
-def log_request(request, response, duration):
+def log_request(method, path, status_code, duration, client):
     trace_id = get_trace_id()
     system_metrics = get_system_metrics()
     runtime_info = get_runtime_info()
@@ -171,18 +171,18 @@ def log_request(request, response, duration):
         "Request completed",
         extra={
             "trace_id": trace_id,
-            "request_method": request.method,
-            "request_path": request.path,
-            "status": response.status_code,
+            "request_method": method,
+            "request_path": path,
+            "status": status_code,
             "duration": duration,
-            "client": request.remote_addr,
+            "client": client,
             "system_metrics": system_metrics,
             "runtime_info": runtime_info,
         },
     )
 
 
-def log_error(request, exception, duration):
+def log_error(method, path, duration, client, exception):
     trace_id = get_trace_id()
     error_type = exception.__class__.__name__
     status_code = 500
@@ -190,21 +190,20 @@ def log_error(request, exception, duration):
     system_metrics = get_system_metrics()
     runtime_info = get_runtime_info()
 
-    # Get the full traceback
     tb = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
 
     logger.error(
         "Request failed",
         extra={
             "trace_id": trace_id,
-            "request_method": request.method,
-            "request_path": request.path,
+            "request_method": method,
+            "request_path": path,
             "status": status_code,
             "duration": duration,
-            "client": request.remote_addr,
+            "client": client,
             "error": str(exception),
             "error_type": error_type,
-            "traceback": tb,  # Use the full traceback
+            "traceback": tb,
             "system_metrics": system_metrics,
             "runtime_info": runtime_info,
         },
