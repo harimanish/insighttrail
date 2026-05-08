@@ -87,7 +87,7 @@ class JSONFormatter(logging.Formatter):
 
 def setup_logger(log_file, log_level_str, max_file_size, backup_count):
     log_directory = os.path.dirname(log_file)
-    if not os.path.exists(log_directory):
+    if log_directory and not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
     # Map log level string to logging constant

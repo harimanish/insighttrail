@@ -80,6 +80,13 @@ def get_package_info(required_packages):
     return sorted(packages, key=lambda x: (not x["required"], x["name"].lower()))
 
 
+def _serialize_logs(logs):
+    for log in logs:
+        if isinstance(log.get("request_time"), datetime):
+            log["request_time"] = log["request_time"].isoformat()
+    return logs
+
+
 def parse_log_file(log_file):
     logs = []
     try:
@@ -95,7 +102,7 @@ def parse_log_file(log_file):
                     continue
 
         logs.sort(key=lambda log: log["request_time"], reverse=True)
-        return logs
+        return _serialize_logs(logs)
     except Exception:
         return []
 

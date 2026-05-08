@@ -44,7 +44,7 @@ def get_process_info():
                         "create_time": datetime.fromtimestamp(proc.create_time()).isoformat(),
                         "name": proc.name(),
                         "threads": proc.num_threads(),
-                        "connections": len(proc.connections()),
+                        "connections": len(proc.net_connections()),
                     }
                     workers.append(worker_info)
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired):
@@ -59,7 +59,7 @@ def get_process_info():
             "total_threads": sum(worker["threads"] for worker in workers)
             + main_process.num_threads(),
             "total_connections": sum(worker["connections"] for worker in workers)
-            + len(main_process.connections()),
+            + len(main_process.net_connections()),
         }
     except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
         return {
@@ -69,7 +69,7 @@ def get_process_info():
             "worker_count": 0,
             "cpu_cores": multiprocessing.cpu_count(),
             "total_threads": current_process.num_threads(),
-            "total_connections": len(current_process.connections()),
+            "total_connections": len(current_process.net_connections()),
             "error": str(e),
         }
 
@@ -80,7 +80,7 @@ def get_system_metrics():
         "memory_percent": psutil.virtual_memory().percent,
         "disk_usage": psutil.disk_usage("/").percent,
         "open_files": len(psutil.Process().open_files()),
-        "connections": len(psutil.Process().connections()),
+        "connections": len(psutil.Process().net_connections()),
         "load_avg": psutil.getloadavg() if hasattr(psutil, "getloadavg") else None,
     }
 

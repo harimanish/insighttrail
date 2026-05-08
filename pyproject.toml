@@ -37,7 +37,9 @@ dependencies = [
 
 [project.optional-dependencies]
 prod = ["waitress"]
-fastapi = ["fastapi"]
+fastapi = [
+    "fastapi",
+]
 dev = [
     "ruff",
     "mypy",
@@ -67,3 +69,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]

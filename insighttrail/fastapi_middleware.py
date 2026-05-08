@@ -94,8 +94,9 @@ class FastAPIInsightTrailMiddleware:
         @router.get("/", response_class=HTMLResponse)
         async def index(request: Request):
             return templates.TemplateResponse(
-                "index.html",
-                {"request": request, "url_prefix": url_prefix},
+                request=request,
+                name="index.html",
+                context={"url_prefix": url_prefix},
             )
 
         @router.get("/api/packages")
