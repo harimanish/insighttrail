@@ -1,37 +1,22 @@
 # InsightTrail
 
-[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![Flask Version](https://img.shields.io/badge/flask-2.x%2B-green.svg)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
-InsightTrail is a lightweight observability package for Python web services. It adds request tracing, structured JSON logs, service metrics, and a built-in dashboard under a dedicated route prefix.
+InsightTrail is a powerful yet lightweight observability middleware for Flask applications. It provides comprehensive logging, real-time metrics, and request tracing out of the box. Designed for developers who need to monitor, debug, and gain insights into their Flask microservices with minimal setup.
 
-It supports both Flask and FastAPI with a single import:
-
-```python
-from insighttrail import InsightTrailMiddleware
-```
-
-## What Is New
-- Common API for Flask and FastAPI (`InsightTrailMiddleware(app, ...)`)
-- Dashboard is isolated to `url_prefix` (default `/insight`) and no longer collides with host app `/`
-- Lightweight UI stack: Milligram + uPlot (removed Bootstrap, DataTables, jQuery, Chart.js)
-- Internal dashboard requests can be excluded from logs/metrics (enabled by default)
-- Safer defaults for sensitive data capture
-- Ultra-light mode for minimal overhead in production
-- Incremental log tailing + paginated analytics API
-- Dependency optimization: TTL cache + optional background refresh
-- Dashboard polling pauses automatically when browser tab is hidden
-- Logger health is exposed in UI (`queue_depth`, `dropped_log_count`)
-- Excel report export (`.xlsx`) with preset/custom UTC date ranges
+With its clean web UI, you can visualize analytics, inspect logs, and track down issues without leaving your browser.
 
 ## Key Features
-- Request tracing with per-request `trace_id`
-- Structured JSON logs with rotation
-- Response-time and service-level metrics
-- Built-in dashboard at `/insight` (or custom prefix)
-- Dependency status table with version chips and stability labels
-- Flask + FastAPI support via one API
+- 🔍 **Request & Error Tracing**: Automatically generate unique trace IDs for each request and trace errors with full context.
+- 📊 **Real-time Analytics UI**: A built-in web dashboard to visualize key metrics, inspect logs, and analyze application performance.
+- 📝 **Structured JSON Logging**: Smart, structured logging with configurable log levels and automatic log rotation.
+- 🚀 **Performance Metrics**: Capture response times, CPU/memory usage, and other system-level metrics for each request.
+- 📦 **Dependency Tracking**: Monitor your project's dependencies and check for the latest versions.
+- ✅ **Sensible Defaults**: Works out of the box with sane defaults, requiring no initial configuration.
+- ⚙️ **Highly Configurable**: Customize logging, log file paths, UI access, and more to fit your needs.
 
 ## Installation
 
@@ -39,239 +24,126 @@ from insighttrail import InsightTrailMiddleware
 pip install insighttrail
 ```
 
-Or from source:
+Or with uv:
 
 ```bash
-git clone https://github.com/your-username/insighttrail.git
+uv add insighttrail
+```
+
+To include the production server (waitress):
+
+```bash
+pip install insighttrail[prod]
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/insightTrail/insighttrail.git
 cd insighttrail
-pip install -e .
+uv sync
 ```
 
 ## Quick Start
 
-### Flask
+### Basic Usage
+Simply wrap your Flask app with the `InsightTrailMiddleware`. It will automatically start logging to a file in your project's parent directory and enable the web UI.
 
 ```python
 from flask import Flask
 from insighttrail import InsightTrailMiddleware
 
 app = Flask(__name__)
-InsightTrailMiddleware(app)
+
+# Initialize InsightTrail with default settings
+# Logs will be stored in ../logs/insighttrail.log
+# The UI will be available at /insight
+middleware = InsightTrailMiddleware(app)
 
 @app.route('/')
-def home():
-    return 'Hello from host app'
-```
+def hello():
+    return 'Hello, World!'
 
-### FastAPI
+if __name__ == '__main__':
+    app.run()
+```
+After running your app, navigate to `/insight` to view the analytics dashboard.
+
+### Advanced Configuration
+You can customize InsightTrail's behavior by passing parameters to the middleware.
 
 ```python
-from fastapi import FastAPI
+from flask import Flask
 from insighttrail import InsightTrailMiddleware
 
-app = FastAPI()
-InsightTrailMiddleware(app)
+app = Flask(__name__)
 
-@app.get('/')
-def home():
-    return {'message': 'Hello from host app'}
-```
-
-Open `http://localhost:8000/insight/` (or your configured prefix).
-
-## Configuration
-
-```python
-InsightTrailMiddleware(
+# Initialize InsightTrail with custom settings
+middleware = InsightTrailMiddleware(
     app,
-    log_file='logs/insighttrail.log',
-    log_level='INFO',
-    max_file_size=1 * 1024 * 1024,
-    backup_count=5,
+    log_file='path/to/your/logs/app.log',
+    log_level='DEBUG',
+    max_file_size=5 * 1024 * 1024,  # 5MB
+    backup_count=10,
     enable_ui=True,
-    url_prefix='/insight',
-    capture_runtime=False,
-    capture_system_metrics=False,
-    capture_env_vars=False,
-    env_allowlist=[],
-    dependency_check=None,
-    ultra_light_mode=False,
-    enable_charts=None,
-    ui_refresh_seconds=10,
-    track_internal_requests=False,
-    async_logging=True,
-    log_queue_size=5000,
-    success_log_sample_rate=1.0,
-    slow_request_threshold_ms=None,
-    dependency_cache_ttl_seconds=21600,
-    dependency_async_refresh=True,
-    dependency_request_timeout=2,
-    enable_excel_reports=True,
-    report_max_rows=200000,
-    report_timezone='UTC',
+    url_prefix='/monitoring' # Access the UI at /monitoring
 )
 ```
 
-### Important Defaults
-- `capture_runtime=False`
-- `capture_env_vars=False`
-- `track_internal_requests=False`
-- `ultra_light_mode=False`
+## Web UI
+InsightTrail comes with a built-in web interface to visualize the data it collects. By default, it's available at the `/insight` endpoint of your application.
 
-### Ultra-Light Mode
-
-```python
-InsightTrailMiddleware(app, ultra_light_mode=True)
-```
-
-When `ultra_light_mode=True`:
-- dependency version network checks are disabled by default
-- charts are disabled by default
-
-You can still explicitly override with `dependency_check=True` or `enable_charts=True`.
-
-### Sampling
-
-```python
-InsightTrailMiddleware(
-    app,
-    success_log_sample_rate=0.2,
-    slow_request_threshold_ms=300,
-)
-```
-
-- `success_log_sample_rate` applies to successful requests only
-- error responses are always logged
-- requests slower than `slow_request_threshold_ms` are always logged
+The UI provides:
+- **Real-time Metrics**: View total requests, error rates, and average response times.
+- **Log Viewer**: Search, filter, and inspect detailed, structured logs.
+- **Error Analysis**: Examine exceptions with full stack traces and request context.
+- **System Health**: Monitor CPU, memory, and disk usage.
 
 ## Configuration Options
 
 | Parameter | Type | Default | Description |
-|---|---|---|---|
-| `log_file` | `str \| None` | `None` | Log file path. If `None`, defaults to `../logs/insighttrail.log` for Flask and `./logs/insighttrail.log` for FastAPI. |
-| `log_level` | `str` | `'INFO'` | Logging level (`DEBUG`, `INFO`, etc.). |
-| `max_file_size` | `int` | `1048576` | Max bytes before rotation. |
-| `backup_count` | `int` | `5` | Number of rotated files to keep. |
-| `enable_ui` | `bool` | `True` | Enable dashboard routes. |
-| `url_prefix` | `str` | `'/insight'` | Dashboard/API route prefix. |
-| `capture_runtime` | `bool` | `False` | Include runtime block in logs. |
-| `capture_system_metrics` | `bool` | `False` | Include per-request system metrics in logs. |
-| `capture_env_vars` | `bool` | `False` | Include environment variables in runtime block. |
-| `env_allowlist` | `list[str]` | `[]` | Restrict env keys when `capture_env_vars=True`. |
-| `dependency_check` | `bool \| None` | `None` | Enable PyPI latest-version checks; resolved by `ultra_light_mode` if `None`. |
-| `ultra_light_mode` | `bool` | `False` | Lightweight preset that disables heavy UI features by default. |
-| `enable_charts` | `bool \| None` | `None` | Enable/disable charts; resolved by `ultra_light_mode` if `None`. |
-| `ui_refresh_seconds` | `int` | `10` | Dashboard auto-refresh interval (minimum 2). |
-| `track_internal_requests` | `bool` | `False` | Include `/insight` internal API calls in logs and metrics. |
-| `async_logging` | `bool` | `True` | Use queue-based non-blocking log writes. |
-| `log_queue_size` | `int` | `5000` | Max in-memory queue size for async logging. |
-| `success_log_sample_rate` | `float` | `1.0` | Sampling rate for successful requests (0.0-1.0). |
-| `slow_request_threshold_ms` | `float \| None` | `None` | Always log requests slower than this threshold. |
-| `dependency_cache_ttl_seconds` | `int` | `21600` | TTL for cached package latest-version metadata (seconds). |
-| `dependency_async_refresh` | `bool` | `True` | Refresh stale dependency metadata in background thread. |
-| `dependency_request_timeout` | `int` | `2` | Timeout (seconds) for each dependency metadata request. |
-| `enable_excel_reports` | `bool` | `True` | Enable Excel report export endpoint and UI action. |
-| `report_max_rows` | `int` | `200000` | Maximum rows included in a generated report. |
-| `report_timezone` | `str` | `'UTC'` | Report time basis label (current implementation uses UTC). |
+|-----------|------|---------|-------------|
+| `log_file` | str | `None` | Path to the log file. If `None`, defaults to `logs/insighttrail.log` in the parent directory of the app's root path. |
+| `log_level` | str | `'INFO'` | Minimum log level to capture (e.g., `'DEBUG'`, `'INFO'`, `'WARNING'`). |
+| `max_file_size` | int | `1048576` (1MB) | Maximum size of the log file in bytes before rotation. |
+| `backup_count` | int | `5` | Number of backup log files to keep. |
+| `enable_ui` | bool | `True` | Enable or disable the web UI. |
+| `url_prefix` | str | `'/insight'` | The URL prefix for the web UI endpoint. |
 
-## Dashboard
-The dashboard includes:
-- request metrics (total/error/avg latency/uptime)
-- process metrics (pid, workers, threads, connections, cores)
-- latency trend and CPU/memory trend charts (when enabled)
-- request log table with details modal tabs (Request/Error/Runtime/System)
-- sticky headers, error-row highlighting, and click-to-copy trace IDs
-- dependency status with filters:
-  - stable/pre-release
-  - required/optional
-  - text search
-- incremental log loading using cursor-based API polling
-- visibility-aware polling pause/resume
-
-## Logger Health
-- Async queue-based logging exposes health metrics in analytics responses:
-  - `logger.queue_depth`
-  - `logger.dropped_log_count`
-  - `logger.async_logging_enabled`
-
-Use these values to detect backpressure and tune `log_queue_size`.
-
-## Analytics API
-- `GET /insight/api/analytics/logs?limit=150&cursor=<id>`
-  - returns only new log entries when cursor is provided
-  - response includes `cursor`, `has_more`, `logs`, `metrics`, and `logger`
-- `GET /insight/api/logs?limit=100&cursor=<id>`
-  - raw paged log access
-
-Example analytics response shape:
+## Log Output Format
+InsightTrail generates structured JSON logs, making them easy to parse and analyze.
 
 ```json
 {
-  "logs": [],
-  "cursor": 1234,
-  "has_more": false,
-  "metrics": {},
-  "logger": {
-    "queue_depth": 0,
-    "dropped_log_count": 0,
-    "async_logging_enabled": true
-  }
+    "trace_id": "a7b1c2d3-e4f5-g6h7-i8j9-k0l1m2n3o4p5",
+    "timestamp": "2024-07-29T12:34:56.789012",
+    "level": "INFO",
+    "request": {
+        "method": "GET",
+        "path": "/api/users",
+        "status": 200,
+        "duration_ms": 45.67,
+        "client": "127.0.0.1"
+    },
+    "runtime": { "...": "..." },
+    "system": { "...": "..." }
 }
 ```
 
-## Dependency Metadata
-- Latest-version checks now use a TTL cache (`dependency_cache_ttl_seconds`).
-- With `dependency_async_refresh=True`, stale entries are refreshed in background to avoid blocking UI requests.
-- Use `dependency_request_timeout` to cap per-package lookup latency.
+## Requirements
 
-## Excel Reports
-- Export endpoint: `GET /insight/api/reports/excel`
-- Preset range export:
-  - `?preset=1d`
-  - `?preset=7d`
-  - `?preset=1m`
-  - `?preset=6m`
-- Custom range export:
-  - `?start=2026-01-01T00:00:00Z&end=2026-01-07T23:59:59Z`
-- Optional sheet selection:
-  - `?include=summary,requests,errors,dependencies`
+- Python 3.8 or higher
+- Flask 2.x or higher
+- Additional dependencies:
+  - psutil
+  - requests
+  - werkzeug
 
-Generated workbook sheets:
-- `Summary`
-- `Requests`
-- `Errors`
-- `Dependencies`
-
-Dashboard export modal supports:
-- preset ranges and custom date range
-- selecting which sheets to include
-- estimated row count preview before download
-- disabled state and loading indicator while report is generated
-
-## Log Format
-
-```json
-{
-  "trace_id": "...",
-  "timestamp": "2026-01-01T12:00:00.000000",
-  "level": "INFO",
-  "request": {
-    "method": "GET",
-    "path": "/api/users",
-    "status": 200,
-    "duration_ms": 12.5,
-    "client": "127.0.0.1"
-  },
-  "runtime": {},
-  "system": {}
-}
-```
-
-`runtime` and `system` are present only when enabled by configuration.
-
-## Notes
-- InsightTrail UI is intentionally mounted only under `url_prefix`.
-- Host application routes (including `/`) remain untouched.
+## Contributing
+Contributions are welcome! If you have a feature request, bug report, or want to improve the code, please feel free to submit an issue or a pull request.
 
 ## License
-MIT
+This project is licensed under the MIT License.
+
+## Support
+For support, please create an issue in the project's GitHub repository.
