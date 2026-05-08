@@ -1,19 +1,23 @@
-from flask import request, g, jsonify, render_template, Blueprint, send_file
+from flask import Flask, request, g, jsonify, render_template, Blueprint, send_file
 import time
 import os
 import json
 import threading
 import glob
+import traceback
+import sys
+import uuid
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from collections import deque
-from .logger import setup_logger, log_request, log_error, get_logger_stats, should_log_success
-from .metrics import record_metrics, get_metrics
-from .traces import trace_request
-import pkg_resources
+from importlib.metadata import distributions
+from werkzeug.wrappers import Request
 import requests
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
+from .logger import setup_logger, log_request, log_error, get_logger_stats, should_log_success
+from .metrics import record_metrics, get_metrics
+from .traces import trace_request
 
 class InsightTrailMiddleware:
     def __init__(self, app, log_file=None, log_level='INFO', max_file_size=1 * 1024 * 1024, backup_count=5,
@@ -65,7 +69,7 @@ class InsightTrailMiddleware:
         self._next_log_id = 1
         self._dependency_cache = {}
         self._dependency_refresh_in_progress = False
-        
+
         if log_file is None:
             # Default to a 'logs' directory in the parent of the app's root path
             app_parent_dir = os.path.dirname(app.root_path)
@@ -109,12 +113,12 @@ class InsightTrailMiddleware:
                         return packages
                 except IOError:
                     return []  # Return empty list on read error
-            
+
             parent = os.path.dirname(current_path)
             if parent == current_path:  # Reached the filesystem root
                 break
             current_path = parent
-            
+
         return []  # Return empty list if no requirements.txt is found
 
     def _get_package_info(self):
@@ -130,28 +134,30 @@ class InsightTrailMiddleware:
 
         stale_keys = []
 
-        for dist in pkg_resources.working_set:
+        for dist in distributions():
             try:
-                # Get package metadata
+                name = dist.metadata['Name']
+                package_key = name.lower()
+
                 is_prerelease = any(tag in dist.version.lower() for tag in ('a', 'b', 'rc', 'dev', 'alpha', 'beta'))
                 package = {
-                    'name': dist.key,
+                    'name': package_key,
                     'current_version': dist.version,
                     'latest_version': dist.version,  # Will be updated if PyPI info is available
-                    'required': dist.key.lower() in required_set,
-                    'description': dist._get_metadata('Summary') if dist.has_metadata('Summary') else None,
+                    'required': package_key in required_set,
+                    'description': dist.metadata.get('Summary'),
                     'stability': 'pre-release' if is_prerelease else 'stable'
                 }
 
                 if self.dependency_check:
-                    cache_data, is_fresh = self._get_cached_dependency_info(dist.key)
+                    cache_data, is_fresh = self._get_cached_dependency_info(package_key)
                     if cache_data is not None:
                         package['latest_version'] = cache_data.get('latest_version', package['latest_version'])
                         if not package['description']:
                             package['description'] = cache_data.get('description')
                         package['stability'] = cache_data.get('stability', package['stability'])
                     if not is_fresh:
-                        stale_keys.append(dist.key)
+                        stale_keys.append(package_key)
 
                 packages.append(package)
             except Exception:
@@ -434,9 +440,6 @@ class InsightTrailMiddleware:
             return {'summary', 'requests', 'errors', 'dependencies'}
         return selected
 
-        # Register the blueprint with the main app
-        self.app.register_blueprint(insight_bp)
-
     def _local_tz(self):
         return datetime.now().astimezone().tzinfo
 
@@ -627,4 +630,3 @@ class InsightTrailMiddleware:
         workbook.save(output)
         output.seek(0)
         return output
-
