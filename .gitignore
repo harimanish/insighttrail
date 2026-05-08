@@ -46,3 +46,4 @@ node_modules
 # github
 .github/
 __pycache__/
+insighttrail.log
