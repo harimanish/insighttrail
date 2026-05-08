@@ -2,10 +2,11 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Flask Version](https://img.shields.io/badge/flask-2.x%2B-green.svg)](https://flask.palletsprojects.com/)
+[![FastAPI Version](https://img.shields.io/badge/fastapi-0.100%2B-teal.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
-InsightTrail is a powerful yet lightweight observability middleware for Flask applications. It provides comprehensive logging, real-time metrics, and request tracing out of the box. Designed for developers who need to monitor, debug, and gain insights into their Flask microservices with minimal setup.
+InsightTrail is a powerful yet lightweight observability middleware for **Flask** and **FastAPI** applications. It provides comprehensive logging, real-time metrics, and request tracing out of the box. Designed for developers who need to monitor, debug, and gain insights into their Python microservices with minimal setup.
 
 With its clean web UI, you can visualize analytics, inspect logs, and track down issues without leaving your browser.
 
@@ -34,6 +35,12 @@ To include the production server (waitress):
 
 ```bash
 pip install insighttrail[prod]
+```
+
+To include FastAPI support:
+
+```bash
+pip install insighttrail[fastapi]
 ```
 
 Or install from source:
@@ -68,6 +75,26 @@ if __name__ == '__main__':
     app.run()
 ```
 After running your app, navigate to `/insight` to view the analytics dashboard.
+
+### FastAPI Usage
+Wrap your FastAPI app with the `FastAPIInsightTrailMiddleware`. It works the same way as Flask — automatic logging, real-time metrics, and the same analytics UI.
+
+```python
+from fastapi import FastAPI
+from insighttrail import FastAPIInsightTrailMiddleware
+
+app = FastAPI()
+
+# Initialize InsightTrail with default settings
+# The UI will be available at /insight
+middleware = FastAPIInsightTrailMiddleware(app)
+
+@app.get('/')
+def hello():
+    return {'hello': 'world'}
+```
+
+Run with `uvicorn` and navigate to `/insight` for the dashboard.
 
 ### Advanced Configuration
 You can customize InsightTrail's behavior by passing parameters to the middleware.
@@ -133,11 +160,13 @@ InsightTrail generates structured JSON logs, making them easy to parse and analy
 ## Requirements
 
 - Python 3.8 or higher
-- Flask 2.x or higher
+- Flask 2.x or higher (for Flask support)
+- FastAPI 0.100 or higher (optional, for FastAPI support)
 - Additional dependencies:
   - psutil
   - requests
-  - werkzeug
+  - starlette (included with FastAPI)
+  - werkzeug (included with Flask)
 
 ## Contributing
 Contributions are welcome! If you have a feature request, bug report, or want to improve the code, please feel free to submit an issue or a pull request.
