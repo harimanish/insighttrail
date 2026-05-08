@@ -1,10 +1,20 @@
+import contextvars
 import uuid
 
-from flask import g
+_trace_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "insighttrail_trace_id", default=""
+)
 
 
-def trace_request(request):
-    # Generate a trace ID
+def generate_trace_id():
     trace_id = str(uuid.uuid4())
-    g.trace_id = trace_id
-    print(f"Trace ID: {trace_id} for {request.method} {request.path}")
+    _trace_id_var.set(trace_id)
+    return trace_id
+
+
+def get_trace_id():
+    return _trace_id_var.get() or "N/A"
+
+
+def set_trace_id(trace_id):
+    _trace_id_var.set(trace_id)

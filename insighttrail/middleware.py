@@ -1,7 +1,6 @@
 import json
 import os
 import time
-import uuid
 from datetime import datetime
 
 from flask import Blueprint, g, jsonify, render_template, request
@@ -15,7 +14,7 @@ from ._core import (
 )
 from .logger import log_error, log_request, setup_logger
 from .metrics import get_metrics, record_metrics
-from .traces import trace_request
+from .traces import generate_trace_id, get_trace_id
 
 
 class InsightTrailMiddleware:
@@ -64,7 +63,8 @@ class InsightTrailMiddleware:
         @app.before_request
         def before_request():
             g.start_time = time.time()
-            trace_request(request)
+            trace_id = generate_trace_id()
+            g.trace_id = trace_id
 
         @app.after_request
         def after_request(response):
@@ -161,7 +161,7 @@ class InsightTrailMiddleware:
 
             log_entry = {
                 "timestamp": datetime.utcnow().isoformat(),
-                "trace_id": getattr(g, "trace_id", str(uuid.uuid4())),
+                "trace_id": get_trace_id(),
                 "request": {
                     "method": request.method,
                     "path": request.path,
@@ -188,7 +188,7 @@ class InsightTrailMiddleware:
 
             log_entry = {
                 "timestamp": datetime.utcnow().isoformat(),
-                "trace_id": getattr(g, "trace_id", str(uuid.uuid4())),
+                "trace_id": get_trace_id(),
                 "request": {
                     "method": request.method,
                     "path": request.path,

@@ -9,7 +9,8 @@ import traceback
 from logging.handlers import RotatingFileHandler
 
 import psutil
-from flask import g
+
+from .traces import get_trace_id
 
 # Configure the logger
 logger = logging.getLogger("insighttrail")
@@ -162,7 +163,7 @@ def get_runtime_info():
 
 
 def log_request(request, response, duration):
-    trace_id = getattr(g, "trace_id", "N/A")
+    trace_id = get_trace_id()
     system_metrics = get_system_metrics()
     runtime_info = get_runtime_info()
 
@@ -182,7 +183,7 @@ def log_request(request, response, duration):
 
 
 def log_error(request, exception, duration):
-    trace_id = getattr(g, "trace_id", "N/A")
+    trace_id = get_trace_id()
     error_type = exception.__class__.__name__
     status_code = 500
 
