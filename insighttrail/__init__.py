@@ -6,11 +6,11 @@ from .middleware import InsightTrailMiddleware
 
 
 def __getattr__(name):
-    if name == "FastAPIInsightTrailMiddleware":
-        from .fastapi_middleware import FastAPIInsightTrailMiddleware
+    if name == "FastAPIInsightTrail":
+        from .fastapi_adapter import FastAPIInsightTrail
 
-        return FastAPIInsightTrailMiddleware
+        return FastAPIInsightTrail
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["InsightTrailMiddleware", "FastAPIInsightTrailMiddleware"]
+__all__ = ["InsightTrailMiddleware", "FastAPIInsightTrail"]

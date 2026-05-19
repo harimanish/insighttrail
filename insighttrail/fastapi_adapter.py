@@ -6,10 +6,10 @@ import time
 import uuid
 from collections import deque
 from datetime import datetime, timedelta, timezone
+from importlib.metadata import distributions
 from io import BytesIO
 from typing import Optional
 
-import pkg_resources
 import requests
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -50,7 +50,7 @@ class _FastAPIInsightMiddleware(BaseHTTPMiddleware):
             if not self.track_internal_requests and is_internal:
                 return response
 
-            record_metrics(request, response, duration)
+            record_metrics(request.method, str(response.status_code), duration)
             is_error_status = response.status_code >= 400
             should_log = is_error_status or should_log_success(
                 duration,
@@ -245,26 +245,28 @@ class FastAPIInsightTrail:
         required_set = app_deps.union(insighttrail_deps)
         stale_keys = []
 
-        for dist in pkg_resources.working_set:
+        for dist in distributions():
             try:
+                name = dist.metadata["Name"]
+                package_key = name.lower()
                 is_prerelease = any(tag in dist.version.lower() for tag in ('a', 'b', 'rc', 'dev', 'alpha', 'beta'))
                 package = {
-                    'name': dist.key,
+                    'name': package_key,
                     'current_version': dist.version,
                     'latest_version': dist.version,
-                    'required': dist.key.lower() in required_set,
-                    'description': dist._get_metadata('Summary') if dist.has_metadata('Summary') else None,
+                    'required': package_key in required_set,
+                    'description': dist.metadata.get("Summary"),
                     'stability': 'pre-release' if is_prerelease else 'stable'
                 }
                 if self.dependency_check:
-                    cache_data, is_fresh = self._get_cached_dependency_info(dist.key)
+                    cache_data, is_fresh = self._get_cached_dependency_info(package_key)
                     if cache_data is not None:
                         package['latest_version'] = cache_data.get('latest_version', package['latest_version'])
                         if not package['description']:
                             package['description'] = cache_data.get('description')
                         package['stability'] = cache_data.get('stability', package['stability'])
                     if not is_fresh:
-                        stale_keys.append(dist.key)
+                        stale_keys.append(package_key)
                 packages.append(package)
             except Exception:
                 continue

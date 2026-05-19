@@ -86,7 +86,10 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_entry)
 
 
-def setup_logger(log_file, log_level_str, max_file_size, backup_count):
+def setup_logger(
+    log_file, log_level_str, max_file_size, backup_count,
+    async_logging=False, log_queue_size=5000,
+):
     log_directory = os.path.dirname(log_file)
     if log_directory and not os.path.exists(log_directory):
         os.makedirs(log_directory)
@@ -129,14 +132,30 @@ def get_system_metrics():
         return {"error": str(e)}
 
 
-def get_runtime_info():
+def get_runtime_info(capture_env_vars=True, env_allowlist=None):
     """Get essential runtime information."""
     try:
         process = psutil.Process()
 
+        env_vars = {}
+        if capture_env_vars:
+            if env_allowlist:
+                env_vars = {
+                    k: v for k, v in os.environ.items() if k in env_allowlist
+                }
+            else:
+                env_vars = {
+                    k: v
+                    for k, v in os.environ.items()
+                    if not any(
+                        sensitive in k.lower()
+                        for sensitive in ["key", "token", "secret", "pass", "auth"]
+                    )
+                }
+
         runtime_info = {
             "python": {
-                "version": sys.version.split()[0],  # Just the version number
+                "version": sys.version.split()[0],
                 "implementation": platform.python_implementation(),
                 "thread_count": threading.active_count(),
             },
@@ -147,14 +166,7 @@ def get_runtime_info():
                 "create_time": datetime.datetime.fromtimestamp(process.create_time()).isoformat(),
             },
             "environment": {
-                "vars": {
-                    k: v
-                    for k, v in os.environ.items()
-                    if not any(
-                        sensitive in k.lower()
-                        for sensitive in ["key", "token", "secret", "pass", "auth"]
-                    )
-                }
+                "vars": env_vars
             },
         }
 

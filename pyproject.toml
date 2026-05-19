@@ -39,6 +39,7 @@ dependencies = [
 prod = ["waitress"]
 fastapi = [
     "fastapi",
+    "openpyxl",
 ]
 dev = [
     "ruff",

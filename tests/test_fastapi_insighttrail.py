@@ -1,16 +1,16 @@
 def test_fastapi_import():
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
 
-    assert FastAPIInsightTrailMiddleware is not None
+    assert FastAPIInsightTrail is not None
 
 
 def test_fastapi_init_no_ui():
     from fastapi import FastAPI
 
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
 
     app = FastAPI()
-    middleware = FastAPIInsightTrailMiddleware(app, enable_ui=False)
+    middleware = FastAPIInsightTrail(app, enable_ui=False)
 
     @app.get("/")
     def home():
@@ -23,32 +23,32 @@ def test_fastapi_init_no_ui():
 def test_fastapi_init_with_ui():
     from fastapi import FastAPI
 
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
 
     app = FastAPI()
-    middleware = FastAPIInsightTrailMiddleware(app, enable_ui=True, url_prefix="/insight")
+    middleware = FastAPIInsightTrail(app, enable_ui=True, url_prefix="/insight")
 
     @app.get("/")
     def home():
         return {"hello": "world"}
 
     assert middleware is not None
-    assert hasattr(middleware, "_fastapi_app")
+    assert middleware.url_prefix == "/insight"
 
 
 def test_fastapi_custom_url_prefix():
     from fastapi import FastAPI
 
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
 
     app = FastAPI()
-    middleware = FastAPIInsightTrailMiddleware(app, url_prefix="/custom")
+    middleware = FastAPIInsightTrail(app, url_prefix="/custom")
 
     @app.get("/")
     def home():
         return {"hello": "world"}
 
-    assert middleware._url_prefix == "/custom"
+    assert middleware.url_prefix == "/custom"
 
 
 def test_fastapi_api_endpoints():
@@ -59,13 +59,13 @@ def test_fastapi_api_endpoints():
     from fastapi import FastAPI
     from starlette.testclient import TestClient
 
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
 
     log_file = os.path.join(tempfile.gettempdir(), f"test_insighttrail_{uuid.uuid4()}.log")
 
     try:
         app = FastAPI()
-        FastAPIInsightTrailMiddleware(app, log_file=log_file, url_prefix="/insight")
+        FastAPIInsightTrail(app, log_file=log_file, url_prefix="/insight")
 
         @app.get("/")
         def home():
@@ -109,7 +109,7 @@ def test_fastapi_middleware_records_metrics():
     from fastapi import FastAPI
     from starlette.testclient import TestClient
 
-    from insighttrail import FastAPIInsightTrailMiddleware
+    from insighttrail import FastAPIInsightTrail
     from insighttrail.metrics import METRICS_STORE, get_metrics
 
     METRICS_STORE.clear()
@@ -118,7 +118,7 @@ def test_fastapi_middleware_records_metrics():
 
     try:
         app = FastAPI()
-        FastAPIInsightTrailMiddleware(app, log_file=log_file, enable_ui=False)
+        FastAPIInsightTrail(app, log_file=log_file, enable_ui=False)
 
         @app.get("/")
         def home():
