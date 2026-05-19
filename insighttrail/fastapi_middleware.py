@@ -95,7 +95,7 @@ class FastAPIInsightTrailMiddleware:
         async def index(request: Request):
             return templates.TemplateResponse(
                 request=request,
-                name="index.html",
+                name="insighttrail_dashboard.html",
                 context={"url_prefix": url_prefix},
             )
 

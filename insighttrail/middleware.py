@@ -100,7 +100,7 @@ class InsightTrailMiddleware:
 
         @insight_bp.route("/")
         def index():
-            return render_template("index.html", url_prefix=url_prefix)
+            return render_template("insighttrail_dashboard.html", url_prefix=url_prefix)
 
         @insight_bp.route("/api/packages")
         def get_packages():

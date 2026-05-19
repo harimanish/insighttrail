@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import platform
+import random
 import sys
 import threading
 import traceback
@@ -208,3 +209,24 @@ def log_error(method, path, duration, client, exception):
             "runtime_info": runtime_info,
         },
     )
+
+
+def get_logger_stats():
+    return {
+        "queue_depth": 0,
+        "dropped_log_count": 0,
+        "async_logging_enabled": False,
+    }
+
+
+def should_log_success(duration, success_log_sample_rate=1.0, slow_request_threshold_ms=None):
+    if slow_request_threshold_ms is not None:
+        duration_ms = duration * 1000.0
+        if duration_ms >= float(slow_request_threshold_ms):
+            return True
+    rate = float(success_log_sample_rate)
+    if rate >= 1.0:
+        return True
+    if rate <= 0.0:
+        return False
+    return random.random() < rate

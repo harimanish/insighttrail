@@ -1,9 +1,9 @@
+import glob
 import json
 import os
+import threading
 import time
 import uuid
-import threading
-import glob
 from collections import deque
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
@@ -18,7 +18,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .logger import get_logger_stats, get_runtime_info, get_system_metrics as get_log_system_metrics, logger, setup_logger, should_log_success
+from .logger import get_logger_stats, get_runtime_info, logger, setup_logger, should_log_success
+from .logger import get_system_metrics as get_log_system_metrics
 from .metrics import get_metrics, record_metrics
 
 
