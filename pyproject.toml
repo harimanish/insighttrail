@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "insighttrail"
+version = "0.1.0"
+description = "An observability middleware for Flask with a real-time analytics UI."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.7"
+authors = [
+    { name = "Team InsightTrail", email = "teaminsighttrail@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Topic :: System :: Logging",
+    "Topic :: System :: Monitoring",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "Flask>=2.0",
+    "psutil",
+    "requests",
+    "openpyxl",
+]
+
+[project.urls]
+Homepage = "https://github.com/insightTrail/insighttrail"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["insighttrail*"]
+
+[tool.setuptools.package-data]
+insighttrail = ["templates/*.html", "static/*"]

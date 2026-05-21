@@ -39,7 +39,15 @@ from insighttrail import InsightTrailMiddleware
 pip install insighttrail
 ```
 
-Or from source:
+Or from source using [uv](https://github.com/astral-sh/uv):
+
+```bash
+git clone https://github.com/your-username/insighttrail.git
+cd insighttrail
+uv sync
+```
+
+Or with pip:
 
 ```bash
 git clone https://github.com/your-username/insighttrail.git

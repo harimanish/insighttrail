@@ -10,7 +10,7 @@ from collections import deque
 from .logger import setup_logger, log_request, log_error, get_logger_stats, should_log_success
 from .metrics import record_metrics, get_metrics
 from .traces import trace_request
-import pkg_resources
+import importlib.metadata
 import requests
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
@@ -130,16 +130,18 @@ class InsightTrailMiddleware:
 
         stale_keys = []
 
-        for dist in pkg_resources.working_set:
+        for dist in importlib.metadata.distributions():
             try:
-                # Get package metadata
-                is_prerelease = any(tag in dist.version.lower() for tag in ('a', 'b', 'rc', 'dev', 'alpha', 'beta'))
+                name = dist.metadata['Name']
+                version = dist.version
+                key = name.lower()
+                is_prerelease = any(tag in version.lower() for tag in ('a', 'b', 'rc', 'dev', 'alpha', 'beta'))
                 package = {
-                    'name': dist.key,
-                    'current_version': dist.version,
-                    'latest_version': dist.version,  # Will be updated if PyPI info is available
-                    'required': dist.key.lower() in required_set,
-                    'description': dist._get_metadata('Summary') if dist.has_metadata('Summary') else None,
+                    'name': key,
+                    'current_version': version,
+                    'latest_version': version,
+                    'required': key in required_set,
+                    'description': dist.metadata.get('Summary'),
                     'stability': 'pre-release' if is_prerelease else 'stable'
                 }
 
@@ -151,7 +153,7 @@ class InsightTrailMiddleware:
                             package['description'] = cache_data.get('description')
                         package['stability'] = cache_data.get('stability', package['stability'])
                     if not is_fresh:
-                        stale_keys.append(dist.key)
+                        stale_keys.append(key)
 
                 packages.append(package)
             except Exception:

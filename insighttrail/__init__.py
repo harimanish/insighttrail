@@ -1,4 +1,5 @@
 from .middleware import InsightTrailMiddleware
+from .fastapi_adapter import FastAPIInsightTrail
 
 
 class InsightTrail:
@@ -12,7 +13,6 @@ class InsightTrail:
             return
 
         if app_module.startswith('fastapi') or app_name == 'FastAPI':
-            from .fastapi_adapter import FastAPIInsightTrail
             self._impl = FastAPIInsightTrail(app, **kwargs)
             self.framework = 'fastapi'
             return
@@ -23,4 +23,4 @@ class InsightTrail:
         )
 
 
-__all__ = ['InsightTrail', 'InsightTrailMiddleware']
+__all__ = ['InsightTrail', 'InsightTrailMiddleware', 'FastAPIInsightTrail']
