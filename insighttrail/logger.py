@@ -2,7 +2,6 @@ import logging
 import queue
 import random
 from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
-from flask import g
 import traceback
 import os
 import json
@@ -225,6 +224,7 @@ def get_runtime_info(capture_env_vars=False, env_allowlist=None):
 
 def log_request(request, response, duration, capture_runtime=False, capture_system_metrics=False,
                 capture_env_vars=False, env_allowlist=None):
+    from flask import g
     trace_id = getattr(g, 'trace_id', 'N/A')
     system_metrics = get_system_metrics() if capture_system_metrics else None
     runtime_info = get_runtime_info(capture_env_vars=capture_env_vars, env_allowlist=env_allowlist) if capture_runtime else None
@@ -242,6 +242,7 @@ def log_request(request, response, duration, capture_runtime=False, capture_syst
 
 def log_error(request, exception, duration, capture_runtime=False, capture_system_metrics=False,
               capture_env_vars=False, env_allowlist=None):
+    from flask import g
     trace_id = getattr(g, 'trace_id', 'N/A')
     error_type = exception.__class__.__name__
     status_code = 500

@@ -15,7 +15,7 @@ import requests
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-class InsightTrailMiddleware:
+class FlaskInsightTrail:
     def __init__(self, app, log_file=None, log_level='INFO', max_file_size=1 * 1024 * 1024, backup_count=5,
                  enable_ui=True, url_prefix='/insight', capture_runtime=False,
                  capture_system_metrics=False, capture_env_vars=False, env_allowlist=None,
