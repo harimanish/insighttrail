@@ -1,18 +1,16 @@
-from .middleware import InsightTrailMiddleware
-from .fastapi_adapter import FastAPIInsightTrail
-
-
 class InsightTrail:
     def __init__(self, app, **kwargs):
         app_module = app.__class__.__module__
         app_name = app.__class__.__name__
 
         if app_module.startswith('flask'):
-            self._impl = InsightTrailMiddleware(app, **kwargs)
+            from .middleware import FlaskInsightTrail
+            self._impl = FlaskInsightTrail(app, **kwargs)
             self.framework = 'flask'
             return
 
         if app_module.startswith('fastapi') or app_name == 'FastAPI':
+            from .fastapi_adapter import FastAPIInsightTrail
             self._impl = FastAPIInsightTrail(app, **kwargs)
             self.framework = 'fastapi'
             return
@@ -23,4 +21,14 @@ class InsightTrail:
         )
 
 
-__all__ = ['InsightTrail', 'InsightTrailMiddleware', 'FastAPIInsightTrail']
+def __getattr__(name):
+    if name == 'FlaskInsightTrail':
+        from .middleware import FlaskInsightTrail
+        return FlaskInsightTrail
+    if name == 'FastAPIInsightTrail':
+        from .fastapi_adapter import FastAPIInsightTrail
+        return FastAPIInsightTrail
+    raise AttributeError(f"module 'insighttrail' has no attribute '{name}'")
+
+
+__all__ = ['InsightTrail', 'FlaskInsightTrail', 'FastAPIInsightTrail']
