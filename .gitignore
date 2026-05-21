@@ -47,3 +47,6 @@ __pycache__/
 
 # uv
 .uv/
+
+.log
+*.log*
